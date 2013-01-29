@@ -27,7 +27,15 @@ namespace BootstrapSupport.HtmlHelpers
         {
             var li = new TagBuilder("li");
             var routeLink = helper.RouteLink(namedRoute.DisplayName, namedRoute.Name);
-            li.InnerHtml = string.Format("{0}<span class=\"divider\"> / </span>", routeLink);
+            if (NavigationViewExtensions.CurrentRouteMatchesName(helper, namedRoute.Name))
+            {
+                li.AddCssClass("active");
+                li.InnerHtml = string.Format("{0}", namedRoute.DisplayName);
+            }
+            else
+            {
+                li.InnerHtml = string.Format("{0}<span class=\"divider\">/</span>", routeLink);
+            }
             var breadcrumbTrailPart = new HtmlString(li.ToString(TagRenderMode.Normal));
             if (namedRoute.Parent == null) return breadcrumbTrailPart;
             return new HtmlString(string.Format("{0}{1}", BuildBreadcrumbTrail(namedRoute.Parent, helper), breadcrumbTrailPart));

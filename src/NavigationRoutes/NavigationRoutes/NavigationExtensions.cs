@@ -90,7 +90,7 @@ namespace NavigationRoutes
             return MvcHtmlString.Create(li.ToString(TagRenderMode.Normal));
         }
 
-        static bool CurrentRouteMatchesName(HtmlHelper html, string routeName)
+        public static bool CurrentRouteMatchesName(HtmlHelper html, string routeName)
         {
             var namedRoute = html.ViewContext.RouteData.Route as NamedRoute;
             if (namedRoute != null)
