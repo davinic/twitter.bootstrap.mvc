@@ -20,7 +20,7 @@ if($globalasax -ne $null) {
     			if($startup -ne $null) 
     			{	
 				$editpoint=$startup.EndPoint.CreateEditPoint()
-				$editpoint.LineUp(1)
+				$editpoint.LineUp(2)
 				$editpoint.EndOfLine()
 				$editpoint.InsertNewLine()
 				$editpoint.Insert("            BootstrapSupport.BootstrapBundleConfig.RegisterBundles(System.Web.Optimization.BundleTable.Bundles);")
