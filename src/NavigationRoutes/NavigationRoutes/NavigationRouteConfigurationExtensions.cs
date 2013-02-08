@@ -47,28 +47,30 @@ namespace NavigationRoutes
         }
 
 
-        public static NavigationRouteBuilder MapNavigationRoute<T>(this RouteCollection routes, string displayName, Expression<Func<T, ActionResult>> action) where T : IController
+        public static NavigationRouteBuilder MapNavigationRoute<T>(this RouteCollection routes, string displayName, Expression<Func<T, ActionResult>> action, string areaName="", bool breakAfter = false) where T : IController
         {
             var newRoute = new NamedRoute("", "", new MvcRouteHandler());
-            newRoute.ToDefaultAction(action);
+            newRoute.ToDefaultAction(action,areaName);
             newRoute.DisplayName = displayName;
+            newRoute.ShouldBreakAfter = breakAfter;
             routes.Add(newRoute.Name, newRoute);
             return new NavigationRouteBuilder(routes, newRoute);
         }
 
-        public static NavigationRouteBuilder AddChildRoute<T>(this NavigationRouteBuilder builder, string DisplayText, Expression<Func<T, ActionResult>> action) where T : IController
+        public static NavigationRouteBuilder AddChildRoute<T>(this NavigationRouteBuilder builder, string DisplayText, Expression<Func<T, ActionResult>> action, string areaName="", bool breakAfter = false) where T : IController
         {
             var childRoute = new NamedRoute("", "", new MvcRouteHandler());
-            childRoute.ToDefaultAction<T>(action);
+            childRoute.ToDefaultAction<T>(action,areaName);
             childRoute.DisplayName = DisplayText;
             childRoute.IsChild = true;
             childRoute.Parent = builder._parent;
+            childRoute.ShouldBreakAfter = breakAfter;
             builder._parent.Children.Add(childRoute);
             builder._routes.Add(childRoute.Name,childRoute);
             return builder;
         }
 
-        public static NamedRoute ToDefaultAction<T>(this NamedRoute route, Expression<Func<T, ActionResult>> action) where T : IController
+        public static NamedRoute ToDefaultAction<T>(this NamedRoute route, Expression<Func<T, ActionResult>> action,string areaName) where T : IController
         {
             var body = action.Body as MethodCallExpression;
 
@@ -107,23 +109,49 @@ namespace NavigationRoutes
             route.Defaults.Add("controller", controllerName);
             route.Defaults.Add("action", actionName);
 
-            route.Url= CreateUrl(actionName,controllerName);
-            route.Name = "Navigation-" + controllerName + "-" + actionName;
+            route.Url= CreateUrl(actionName,controllerName,areaName);
+            //TODO: Add area to route name
+            if(areaName=="")
+                route.Name = "Navigation-" + controllerName + "-" + actionName;
+            else
+                route.Name = "Navigation-" + areaName + "-"  + controllerName + "-" + actionName;
 
             if(route.DataTokens == null)
                 route.DataTokens = new RouteValueDictionary();
             route.DataTokens.Add("Namespaces", new string[] {typeof (T).Namespace});
+            if (!string.IsNullOrEmpty(areaName))
+            {
+                route.DataTokens.Add("area", areaName.ToLower());
+            }
 
             return route;
         }
 
+        public static string CreateUrl(string actionName, string controllerName,string areaName)
+        {
+            var url = CreateUrl(actionName, controllerName);
+            if(areaName=="")        
+                return url;
+
+            return areaName.ToLower() + "/" + url;
+
+        }
+
         public static string CreateUrl(string actionName, string controllerName)
         {
-            if (controllerName.Equals("home", StringComparison.CurrentCultureIgnoreCase) && actionName.Equals("index",StringComparison.CurrentCultureIgnoreCase))
+            if (controllerName.Equals("home", StringComparison.CurrentCultureIgnoreCase))
             {
-                return "";
+                if (actionName.Equals("index", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    return "";
+                }
+                else
+                {
+                    return actionName.ToLower();
+                }
             }
-            return controllerName.ToLower() +"/"+ actionName.ToLower();
+
+            return controllerName.ToLower() + "/" + actionName.ToLower();
         }
 
     }
